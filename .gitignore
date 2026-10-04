@@ -1,0 +1,6 @@
+source-*.jpg
+source-*.jpeg
+source-*.png
+my-photo.*
+.venv/
+__pycache__/

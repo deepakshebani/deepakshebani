@@ -1,16 +1,16 @@
-## Hi there 👋
+<div align="center">
 
-<!--
-**deepakshebani/deepakshebani** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+<h3><code>deepak@github ~ $ ./contributions.sh</code></h3>
+<img src="./contrib-heatmap.svg" width="860" alt="Contribution graph" />
 
-Here are some ideas to get you started:
+<br><br>
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+<h3><code>deepak@github ~ $ whoami</code></h3>
+<table>
+  <tr>
+    <td valign="top"><img src="./ascii-portrait.svg" width="370" alt="DS monogram" /></td>
+    <td valign="top"><img src="./info-card.svg" width="490" alt="Deepak Shebani: sales and account management, Dublin" /></td>
+  </tr>
+</table>
+
+</div>
