@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 56" width="860" height="56" role="img" aria-label="Digital ad sales: Google, Amazon and Meta Ads / Account management and business development / Salesforce Agentforce Specialist / Building sales tools with Sheets, Apps Script and Firebase / Open to roles in Dublin">
+<rect x="0.5" y="0.5" width="859" height="55" rx="10" fill="#0d1117" stroke="#30363d"/>
+<defs>
+<clipPath id="t0"><rect x="301.0" y="10" width="0" height="36"><animate attributeName="width" values="0;0.0;407.0;407.0;0.0;0" keyTimes="0;0.0001;0.0681;0.1617;0.1872;1" dur="23.50s" repeatCount="indefinite" calcMode="linear"/></rect></clipPath>
+<clipPath id="t1"><rect x="301.0" y="10" width="0" height="36"><animate attributeName="width" values="0;0.0;389.0;389.0;0.0;0" keyTimes="0;0.2000;0.2681;0.3617;0.3872;1" dur="23.50s" repeatCount="indefinite" calcMode="linear"/></rect></clipPath>
+<clipPath id="t2"><rect x="301.0" y="10" width="0" height="36"><animate attributeName="width" values="0;0.0;290.0;290.0;0.0;0" keyTimes="0;0.4000;0.4681;0.5617;0.5872;1" dur="23.50s" repeatCount="indefinite" calcMode="linear"/></rect></clipPath>
+<clipPath id="t3"><rect x="301.0" y="10" width="0" height="36"><animate attributeName="width" values="0;0.0;524.0;524.0;0.0;0" keyTimes="0;0.6000;0.6681;0.7617;0.7872;1" dur="23.50s" repeatCount="indefinite" calcMode="linear"/></rect></clipPath>
+<clipPath id="t4"><rect x="301.0" y="10" width="0" height="36"><animate attributeName="width" values="0;0.0;209.0;209.0;0.0;0" keyTimes="0;0.8000;0.8681;0.9617;0.9872;1" dur="23.50s" repeatCount="indefinite" calcMode="linear"/></rect></clipPath>
+</defs>
+<g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,DejaVu Sans Mono,Liberation Mono,monospace" font-size="15" xml:space="preserve">
+<text x="22" y="34" fill="#39d353">deepak@dublin:~$ whoami --role</text>
+<text x="301.0" y="34" fill="#69f0a0" font-weight="bold" clip-path="url(#t0)">Digital&#160;ad&#160;sales:&#160;Google,&#160;Amazon&#160;and&#160;Meta&#160;Ads</text>
+<text x="301.0" y="34" fill="#69f0a0" font-weight="bold" clip-path="url(#t1)">Account&#160;management&#160;and&#160;business&#160;development</text>
+<text x="301.0" y="34" fill="#69f0a0" font-weight="bold" clip-path="url(#t2)">Salesforce&#160;Agentforce&#160;Specialist</text>
+<text x="301.0" y="34" fill="#69f0a0" font-weight="bold" clip-path="url(#t3)">Building&#160;sales&#160;tools&#160;with&#160;Sheets,&#160;Apps&#160;Script&#160;and&#160;Firebase</text>
+<text x="301.0" y="34" fill="#69f0a0" font-weight="bold" clip-path="url(#t4)">Open&#160;to&#160;roles&#160;in&#160;Dublin</text>
+<rect x="301.0" y="20" width="9" height="18" fill="#69f0a0"><animate attributeName="x" values="301.0;709.0;709.0;301.0;301.0;691.0;691.0;301.0;301.0;592.0;592.0;301.0;301.0;826.0;826.0;301.0;301.0;511.0;511.0;301.0;301.0" keyTimes="0.0000;0.0681;0.1617;0.1872;0.2000;0.2681;0.3617;0.3872;0.4000;0.4681;0.5617;0.5872;0.6000;0.6681;0.7617;0.7872;0.8000;0.8681;0.9617;0.9872;1.0000" dur="23.50s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.5;0.5;1" dur="1.1s" repeatCount="indefinite"/></rect>
+</g></svg>
