@@ -80,7 +80,8 @@ def build_svg(lines: list[str], static: bool) -> str:
         base = PAD + i * LINE_H + FONT_SIZE * 0.85
         out.append(
             f'<text x="{PAD}" y="{base:.1f}" clip-path="url(#r{i})" '
-            f'textLength="{len(line) * CHAR_W:.1f}" lengthAdjust="spacing">{escape(line)}</text>'
+            # non-breaking spaces: browsers collapse runs of normal spaces even with xml:space
+            f'textLength="{len(line) * CHAR_W:.1f}" lengthAdjust="spacing">{escape(line).replace(" ", "&#160;")}</text>'
         )
     out.append("</g>")
 
