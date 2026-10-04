@@ -267,14 +267,25 @@ def main() -> None:
     ap.add_argument("--delay", type=float, default=0.8, help="pause before typing starts")
     ap.add_argument("--no-ghost", dest="ghost", action="store_false", help="skip the faint preview before typing")
     ap.add_argument("--bg", default="#000000", help="panel background colour, e.g. #000000")
+    ap.add_argument("--theme", choices=["dark", "light"], default="dark",
+                    help="light: dark glyphs on white for GitHub's light mode (writes the same layout)")
     ap.add_argument("--aspect", type=float, default=1.3, help="panel height/width ratio; 1.3 matches the info card at 370px")
     args = ap.parse_args()
 
     static = os.environ.get("STATIC") == "1"
+    global SHADES
+    if args.theme == "light":
+        # on white, dense glyphs read dark, so map darkness to density and shade
+        # light-green (highlights) to deep green (shadows)
+        SHADES = _ramp("#c3ead0", "#2ea043", "#06301a", 10)
+        args.negative = True
     lines = to_grid(Image.open(args.src), args.cols, args.negative)
     svg = build_mono(lines, static) if args.mono else build_terminal(lines, static, args.title, args.prompt,
                                                                        args.type_time, args.row_dur, args.delay, args.ghost,
                                                                        args.bg, args.aspect)
+    if args.theme == "light":
+        from theme_light import to_light
+        svg = to_light(svg.replace(' filter="url(#glow)"', ""), heatmap=False)
     Path(args.out).write_text(svg, encoding="utf-8")
     print(f"wrote {Path(args.out).name} ({len(lines)} rows x {args.cols} cols)")
 
