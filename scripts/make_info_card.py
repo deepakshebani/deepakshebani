@@ -22,7 +22,7 @@ ROWS = [
     ("Education",  "Master's in Management, DCU (2025); Mechanical Engineering degree"),
     ("Certs",      "Salesforce Agentforce Specialist, Google Ads, Amazon Ads"),
     ("Building",   "Leaflet + Firebase field map; Google Sheets outreach automation"),
-    ("Web",        "barkingdog.ie"),
+    ("Web",        "deepakshebani.com"),
     ("Contact",    "deepakshebani@gmail.com"),
 ]
 # ----------------------------------------------------------------------------
