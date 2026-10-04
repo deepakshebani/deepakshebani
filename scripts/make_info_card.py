@@ -40,8 +40,9 @@ VAL = "#c9d1d9"
 ACCENT = "#39d353"
 DIM = "#8b949e"
 SWATCHES = ["#f85149", "#d29922", "#39d353", "#58a6ff", "#bc8cff", "#39c5cf", "#c9d1d9", "#6e7681"]
-STEP = 0.12         # seconds between lines
-START = 0.3
+STEP = float(os.environ.get("CARD_STEP", 0.38))    # seconds between lines
+START = float(os.environ.get("CARD_START", 1.2))   # pause before the first line
+FADE = float(os.environ.get("CARD_FADE", 0.8))    # each line's fade-in
 
 
 def main() -> None:
@@ -60,7 +61,7 @@ def main() -> None:
 
     css = "" if static else (
         "<style>"
-        ".l{opacity:0;transform:translateX(-6px);animation:in .35s ease-out forwards}"
+        f".l{{opacity:0;transform:translateX(-6px);animation:in {FADE}s ease-out forwards}}"
         "@keyframes in{to{opacity:1;transform:translateX(0)}}"
         "</style>"
     )

@@ -28,6 +28,8 @@ BG = "#0d1117"
 BORDER = "#30363d"
 TEXT = "#8b949e"
 BRIGHT = "#c9d1d9"
+HEAT_STEP = float(os.environ.get("HEAT_STEP", 0.055))  # delay per diagonal
+HEAT_DROP = float(os.environ.get("HEAT_DROP", 0.6))   # each box's drop-in
 FONT = "ui-monospace,SFMono-Regular,Menlo,Consolas,DejaVu Sans Mono,Liberation Mono,monospace"
 
 
@@ -70,7 +72,7 @@ def main() -> None:
     css = "" if static else (
         "<style>"
         ".c{opacity:0;transform-box:fill-box;transform-origin:center;"
-        "animation:drop .45s cubic-bezier(.2,.8,.2,1) forwards}"
+        f"animation:drop {HEAT_DROP}s cubic-bezier(.2,.8,.2,1) forwards}}"
         "@keyframes drop{0%{opacity:0;transform:translateY(-8px) scale(.6)}"
         "100%{opacity:1;transform:translateY(0) scale(1)}}"
         ".f{opacity:0;animation:fade .6s ease-out forwards}"
@@ -101,7 +103,7 @@ def main() -> None:
         lvl = level_for(d["count"], d["level"], top)
         x = x0 + col * STEP
         y = TOP + row * STEP
-        delay = (col + row) * 0.022
+        delay = (col + row) * HEAT_STEP
         last_delay = max(last_delay, delay)
         anim = "" if static else f' class="c" style="animation-delay:{delay:.3f}s"'
         title = f'{d["count"]} contribution{"s" if d["count"] != 1 else ""} on {d["date"]}'

@@ -139,36 +139,43 @@ def build_mono(lines, static):
     return "\n".join(out)
 
 
-def clip_rect(i, x, y, full_w, begin, static):
+def clip_rect(i, x, y, full_w, begin, static, row_dur=ROW_DUR):
     if static:
         return f'<clipPath id="r{i}"><rect x="{x}" y="{y:.1f}" width="{full_w:.1f}" height="{LINE_H:.1f}"/></clipPath>'
     return (f'<clipPath id="r{i}"><rect x="{x}" y="{y:.1f}" width="0" height="{LINE_H:.1f}">'
             f'<animate attributeName="width" from="0" to="{full_w:.1f}" begin="{begin:.2f}s" '
-            f'dur="{ROW_DUR}s" fill="freeze"/></rect></clipPath>')
+            f'dur="{row_dur}s" fill="freeze"/></rect></clipPath>')
 
 
-def cursor(lines, x0, y0, full_w, gap, colour):
+def cursor(lines, x0, y0, full_w, gap, colour, row_dur=ROW_DUR, delay=0.0):
     out = [f'<rect x="{x0}" y="{y0}" width="{CHAR_W:.1f}" height="{LINE_H:.1f}" fill="{colour}" opacity="0">']
     for i in range(len(lines)):
-        begin = i * gap
+        begin = delay + i * gap
         out.append(f'<set attributeName="y" to="{y0 + i * LINE_H:.1f}" begin="{begin:.2f}s"/>')
-        out.append(f'<animate attributeName="x" from="{x0}" to="{x0 + full_w:.1f}" begin="{begin:.2f}s" dur="{ROW_DUR}s"/>')
-    end = (len(lines) - 1) * gap + ROW_DUR
+        out.append(f'<animate attributeName="x" from="{x0}" to="{x0 + full_w:.1f}" begin="{begin:.2f}s" dur="{row_dur}s"/>')
+    end = delay + (len(lines) - 1) * gap + row_dur
     out.append('<set attributeName="opacity" to="0.9" begin="0s"/>')
     out.append(f'<set attributeName="opacity" to="0" begin="{end:.2f}s"/>')
     out.append("</rect>")
     return out
 
 
-def build_terminal(lines, static, title, prompt):
+def build_terminal(lines, static, title, prompt, type_time=2.4, row_dur=ROW_DUR, delay=0.0, ghost=False,
+                   bg=BG, aspect=None):
+    """type_time: seconds from first to last row starting; row_dur: seconds each
+    row takes to type; delay: pause (cursor blinking) before typing starts;
+    ghost: show a faint preview of the whole portrait while it types in."""
     cols = max(len(l) for l, _ in lines)
     full_w = cols * CHAR_W
     art_h = len(lines) * LINE_H
-    W = round(full_w + PAD * 2)
     H = round(BAR + PAD + art_h + PAD + FOOT)
-    x0, y0 = PAD, BAR + PAD
-    gap = min(0.06, 2.4 / len(lines))
-    end = (len(lines) - 1) * gap + ROW_DUR
+    pad_x = PAD
+    if aspect:  # widen with side margins so the panel has this height/width ratio
+        pad_x = max(PAD, (H / aspect - full_w) / 2)
+    W = round(full_w + pad_x * 2)
+    x0, y0 = round(pad_x, 1), BAR + PAD
+    gap = type_time / max(len(lines) - 1, 1)
+    end = delay + (len(lines) - 1) * gap + row_dur
 
     out = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" '
@@ -188,12 +195,12 @@ def build_terminal(lines, static, title, prompt):
         f'<clipPath id="frame"><rect x="1" y="{BAR}" width="{W - 2}" height="{H - BAR - 1}" rx="9"/></clipPath>',
     ]
     for i in range(len(lines)):
-        out.append(clip_rect(i, x0, y0 + i * LINE_H, full_w, i * gap, static))
+        out.append(clip_rect(i, x0, y0 + i * LINE_H, full_w, delay + i * gap, static, row_dur))
     out.append("</defs>")
 
     # frame + title bar, matching the info card
     out += [
-        f'<rect x="0.5" y="0.5" width="{W - 1}" height="{H - 1}" rx="10" fill="{BG}" stroke="{BORDER}"/>',
+        f'<rect x="0.5" y="0.5" width="{W - 1}" height="{H - 1}" rx="10" fill="{bg}" stroke="{BORDER}"/>',
         f'<path d="M0.5 10.5 a10 10 0 0 1 10 -10 h{W - 21} a10 10 0 0 1 10 10 v18 h-{W - 1} z" fill="#161b22"/>',
         f'<line x1="0.5" y1="28.5" x2="{W - 0.5}" y2="28.5" stroke="{BORDER}"/>',
         '<circle cx="16" cy="14.5" r="5" fill="#f85149"/>',
@@ -202,8 +209,18 @@ def build_terminal(lines, static, title, prompt):
         f'<text x="{W / 2:.0f}" y="18.5" text-anchor="middle" font-family="{FAMILY}" font-size="11" fill="{DIM}">{escape(title)}</text>',
     ]
 
-    # the portrait
-    out.append(f'<g font-family="{FAMILY}" font-size="{FONT_SIZE}" fill="{SHADES[2]}" filter="url(#glow)" xml:space="preserve">')
+    # optional ghost: the whole portrait faintly visible, fading out once typed
+    if ghost and not static:
+        out.append(f'<g font-family="{FAMILY}" font-size="{FONT_SIZE}" fill="{SHADES[2]}" xml:space="preserve" opacity="0">'
+                   f'<animate attributeName="opacity" values="0;0.14;0.14;0" keyTimes="0;0.15;0.85;1" '
+                   f'dur="{end + 0.6:.2f}s" fill="freeze"/>')
+        out += text_rows(lines, x0, y0, None, colour=True)
+        out.append("</g>")
+
+    # the portrait, brightening slightly once fully printed
+    bright = "" if static else (f' opacity="0.82"><animate attributeName="opacity" from="0.82" to="1" '
+                                f'begin="{end:.2f}s" dur="1.2s" fill="freeze"/')
+    out.append(f'<g font-family="{FAMILY}" font-size="{FONT_SIZE}" fill="{SHADES[2]}" filter="url(#glow)" xml:space="preserve"{bright}>')
     out += text_rows(lines, x0, y0, "r", colour=True)
     out.append("</g>")
 
@@ -214,13 +231,13 @@ def build_terminal(lines, static, title, prompt):
         out.append(
             f'<rect x="0" y="{BAR - 60}" width="{W}" height="60" fill="url(#sweep)" opacity="0">'
             f'<set attributeName="opacity" to="1" begin="{end:.2f}s"/>'
-            f'<animate attributeName="y" from="{BAR - 60}" to="{H}" begin="{end:.2f}s" dur="1.4s" fill="freeze"/>'
+            f'<animate attributeName="y" from="{BAR - 60}" to="{H}" begin="{end:.2f}s" dur="{max(1.4, row_dur * 2.5):.1f}s" fill="freeze"/>'
             f'</rect>'
         )
     out.append("</g>")
 
     if not static:
-        out += cursor(lines, x0, y0, full_w, gap, "#69f0a0")
+        out += cursor(lines, x0, y0, full_w, gap, "#69f0a0", row_dur, delay)
 
     # prompt line with a blinking cursor
     py = H - 10
@@ -238,18 +255,26 @@ def build_terminal(lines, static, title, prompt):
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--cols", type=int, default=84)
+    ap.add_argument("--cols", type=int, default=80)
     ap.add_argument("--src", default=str(SRC))
     ap.add_argument("--out", default=str(ROOT / "ascii-portrait.svg"))
     ap.add_argument("--mono", action="store_true", help="plain one-colour style from the blog")
     ap.add_argument("--negative", action="store_true", help="dark pixels -> dense glyphs")
     ap.add_argument("--title", default="~/portrait.ascii")
     ap.add_argument("--prompt", default="deepak@dublin:~$")
+    ap.add_argument("--type-time", type=float, default=7.0, help="seconds for all rows to start typing")
+    ap.add_argument("--row-dur", type=float, default=0.8, help="seconds to type one row")
+    ap.add_argument("--delay", type=float, default=0.8, help="pause before typing starts")
+    ap.add_argument("--no-ghost", dest="ghost", action="store_false", help="skip the faint preview before typing")
+    ap.add_argument("--bg", default="#000000", help="panel background colour, e.g. #000000")
+    ap.add_argument("--aspect", type=float, default=1.3, help="panel height/width ratio; 1.3 matches the info card at 370px")
     args = ap.parse_args()
 
     static = os.environ.get("STATIC") == "1"
     lines = to_grid(Image.open(args.src), args.cols, args.negative)
-    svg = build_mono(lines, static) if args.mono else build_terminal(lines, static, args.title, args.prompt)
+    svg = build_mono(lines, static) if args.mono else build_terminal(lines, static, args.title, args.prompt,
+                                                                       args.type_time, args.row_dur, args.delay, args.ghost,
+                                                                       args.bg, args.aspect)
     Path(args.out).write_text(svg, encoding="utf-8")
     print(f"wrote {Path(args.out).name} ({len(lines)} rows x {args.cols} cols)")
 
