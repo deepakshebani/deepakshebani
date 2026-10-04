@@ -1,13 +1,14 @@
 """Step 3a: prep a photo for ASCII conversion.
 
-1. Remove the background with rembg (skipped with a warning if rembg is not installed)
+1. Remove the background with rembg (human-segmentation model), keeping only
+   the largest shape so stray background bits don't print
 2. Boost local contrast with OpenCV CLAHE
-3. Composite onto pure white so the background maps to blank space
+3. Save grayscale + alpha, so the ASCII step knows exactly where the subject is
 
-Usage:  python scripts/prep_photo.py source-photo.jpg
-Output: source-prepped.png (grayscale)
+Usage:  python scripts/prep_photo.py source-photo.jpg [--crop x0,y0,x1,y1]
+Output: source-prepped.png (grayscale with alpha)
 """
-import sys
+import argparse
 from pathlib import Path
 
 import cv2
@@ -20,45 +21,55 @@ OUT = ROOT / "source-prepped.png"
 
 def remove_background(img: Image.Image) -> Image.Image:
     try:
-        from rembg import remove
+        from rembg import new_session, remove
     except ImportError:
         print("rembg not installed, keeping the original background "
               "(pip install rembg onnxruntime for a cleaner result)")
         return img.convert("RGBA")
-    return remove(img)
+    return remove(img, session=new_session("u2net_human_seg"))
+
+
+def largest_component(alpha: np.ndarray) -> np.ndarray:
+    mask = (alpha > 0.5).astype(np.uint8)
+    n, labels, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
+    if n <= 2:
+        return alpha
+    keep = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+    return alpha * (labels == keep)
 
 
 def main() -> None:
-    if len(sys.argv) < 2:
-        sys.exit("usage: python scripts/prep_photo.py <photo>")
-    src = Image.open(sys.argv[1])
-    src = ImageOps.exif_transpose(src).convert("RGB")
+    ap = argparse.ArgumentParser()
+    ap.add_argument("photo")
+    ap.add_argument("--crop", help="x0,y0,x1,y1 in original pixels, e.g. head and shoulders")
+    args = ap.parse_args()
 
-    # keep processing fast and consistent
+    src = ImageOps.exif_transpose(Image.open(args.photo)).convert("RGB")
+    if args.crop:
+        src = src.crop(tuple(int(v) for v in args.crop.split(",")))
     src.thumbnail((1200, 1200))
 
-    cut = remove_background(src)  # RGBA
-    rgba = np.array(cut)
-    alpha = rgba[:, :, 3].astype(np.float32) / 255.0
+    rgba = np.array(remove_background(src))
+    alpha = largest_component(rgba[:, :, 3].astype(np.float32) / 255.0)
+    alpha = cv2.GaussianBlur(alpha, (0, 0), 1.2)  # soften the cut edge
 
     gray = cv2.cvtColor(rgba[:, :, :3], cv2.COLOR_RGB2GRAY)
-    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
-    gray = clahe.apply(gray).astype(np.float32)
+    clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
+    gray = clahe.apply(gray)
+    # unsharp mask: ASCII only has ~12 tones, so crisp edges carry the likeness
+    blur = cv2.GaussianBlur(gray, (0, 0), 3)
+    gray = cv2.addWeighted(gray, 1.8, blur, -0.8, 0)
 
-    # composite onto white: background -> 255 -> space glyph
-    out = gray * alpha + 255.0 * (1.0 - alpha)
-    out = np.clip(out, 0, 255).astype(np.uint8)
-
-    # crop to the subject's bounding box with a little padding
     ys, xs = np.where(alpha > 0.1)
     if len(xs):
-        pad = 20
-        y0, y1 = max(ys.min() - pad, 0), min(ys.max() + pad, out.shape[0])
-        x0, x1 = max(xs.min() - pad, 0), min(xs.max() + pad, out.shape[1])
-        out = out[y0:y1, x0:x1]
+        pad = 12
+        y0, y1 = max(ys.min() - pad, 0), min(ys.max() + pad, gray.shape[0])
+        x0, x1 = max(xs.min() - pad, 0), min(xs.max() + pad, gray.shape[1])
+        gray, alpha = gray[y0:y1, x0:x1], alpha[y0:y1, x0:x1]
 
-    Image.fromarray(out, mode="L").save(OUT)
-    print(f"wrote {OUT.name} ({out.shape[1]}x{out.shape[0]})")
+    la = np.dstack([gray, (alpha * 255).astype(np.uint8)])
+    Image.fromarray(la, mode="LA").save(OUT)
+    print(f"wrote {OUT.name} ({la.shape[1]}x{la.shape[0]})")
 
 
 if __name__ == "__main__":
